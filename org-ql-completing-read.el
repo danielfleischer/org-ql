@@ -146,11 +146,7 @@ single predicate)."
                                 collect (list completion prefix suffix)))
                 (annotate (candidate)
                           ;; (debug-message "ANNOTATE:%S" candidate)
-                          (while-no-input
-                            ;; Using `while-no-input' here doesn't make it as responsive as,
-                            ;; e.g. Helm while typing, but it seems to help a little when using the
-                            ;; org-rifle-style snippets.
-                            (or (snippet (gethash candidate table)) "")))
+                          (or (snippet (gethash candidate table)) ""))
                 (snippet
                  (marker) (when-let
                               ((snippet
@@ -244,9 +240,7 @@ single predicate)."
                                         ;; Limiting each context word to 15 characters prevents
                                         ;; excessively long, non-word strings from ending up in
                                         ;; snippets, which can adversely affect performance.
-                                        (rx-to-string `(seq (optional (repeat 1 3 (repeat 1 15 (not space)) (0+ space)))
-                                                            bow (or ,@query-tokens) (0+ (not space))
-                                                            (optional (repeat 1 3 (0+ space) (repeat 1 15 (not space))))))))))
+                                        (rx-to-string `(seq (or ,@query-tokens)))))))
                              (org-ql-select buffers-files (org-ql--query-string-to-sexp input)
                                :action #'action))))
       ;; NOTE: It seems that the `completing-read' machinery can call, abort, and re-call the
