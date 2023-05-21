@@ -264,7 +264,7 @@ single predicate)."
       (mapc #'org-ql--ensure-buffer buffers-files)
       (let* ((completion-styles '(org-ql-completing-read))
              (completion-styles-alist (list (list 'org-ql-completing-read #'try #'all "Org QL Find")))
-             (selected (completing-read prompt #'collection nil t)))
+             (selected (completing-read prompt #'collection nil nil)))
         ;; (debug-message "SELECTED:%S  KEYS:%S" selected (hash-table-keys table))
         (or (gethash selected table)
             ;; If there are completions in the table, but none of them exactly match the user input
@@ -289,9 +289,9 @@ Returns up to `org-ql-completing-read-snippet-length' characters."
                       (org-entry-end-position))))
         (concat org-ql-completing-read-snippet-prefix
                 (truncate-string-to-width
-                 (replace-regexp-in-string "\n" " " (buffer-substring (point) end)
-                                           t t)
-                 50 nil nil t))))))
+                 (replace-regexp-in-string (rx (1+ "\n")) "\n"
+                                           (buffer-substring (point) end) t t)
+                 100 nil nil t))))))
 
 (defun org-ql-completing-read--snippet-regexp (regexp)
   "Return a snippet of the current entry's matches for REGEXP."
@@ -301,12 +301,12 @@ Returns up to `org-ql-completing-read-snippet-length' characters."
       (org-end-of-meta-data t)
       (unless (org-at-heading-p)
         (let* ((end (org-entry-end-position))
-               (snippets (cl-loop while (re-search-forward regexp end t)
-                                  concat (match-string 0) concat "…"
-                                  do (goto-char (match-end 0)))))
+               (snippets (progn
+                           (re-search-forward regexp end)
+                           (match-string 0)))
+               (snippets (replace-regexp-in-string (rx (1+ "\n")) "\n" snippets)))
           (unless (string-empty-p snippets)
-            (concat org-ql-completing-read-snippet-prefix
-                    (replace-regexp-in-string (rx (1+ "\n")) "  " snippets t t))))))))
+            (concat org-ql-completing-read-snippet-prefix snippets)))))))
 
 ;;;; Footer
 
